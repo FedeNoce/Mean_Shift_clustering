@@ -23,62 +23,6 @@
 #define EPSILON 0.1
 
 
-__global__ void Tiling_MeanShift(const float *d_original_datapoints_x, const float *d_original_datapoints_y, float *d_shifted_datapoints_x, float *d_shifted_datapoints_y)
-{
-    __shared__ float tile[TILE_WIDTH][2];
-    int tx = threadIdx.x;
-    int idx = blockIdx.x * blockDim.x + tx;
-
-    if (idx >= N) return;
-
-    float2 newPosition = make_float2(0.0, 0.0);
-    float tot_weight = 0.0;
-
-    for (int tile_i = 0; tile_i < (N - 1) / TILE_WIDTH + 1; ++tile_i) {
-
-        int tile_idx = tile_i * TILE_WIDTH + tx;
-
-        if (tile_idx < N) {
-            tile[tx][0] = d_original_datapoints_x[tile_idx];
-            tile[tx][1] = d_original_datapoints_y[tile_idx];
-
-        } else {
-            tile[tx][0] = 0.0;
-            tile[tx][1] = 0.0;
-        }
-        __syncthreads();
-
-        if(idx < N){
-            float x = d_shifted_datapoints_x[idx];
-            float y = d_shifted_datapoints_y[idx];
-            float2 shiftedPoint = make_float2(x, y);
-
-            for(int i = 0; i < TILE_WIDTH; i++){
-                if (tile[i][0] != 0.0 && tile[i][1] != 0.0) {
-                    float2 originalPoint = make_float2(tile[i][0], tile[i][1]);
-                    float2 difference = make_float2(0.0, 0.0);
-                    difference.x = shiftedPoint.x - originalPoint.x;
-                    difference.y = shiftedPoint.y - originalPoint.y;
-                    float squaredDistance = pow(difference.x,2) + pow(difference.y,2);
-                    if(sqrt(squaredDistance) <= BANDWIDTH){
-                        float weight= exp(((-squaredDistance)/(2* pow(BANDWIDTH,2))));
-                        newPosition.x += originalPoint.x * weight;
-                        newPosition.y += originalPoint.y * weight;
-                        tot_weight += weight;
-                    }
-                }
-            }
-        }
-        __syncthreads();
-    }
-    if(idx < N){
-        newPosition.x /= tot_weight;
-        newPosition.y /= tot_weight;
-        d_shifted_datapoints_x[idx] = newPosition.x ;
-        d_shifted_datapoints_y[idx] = newPosition.y;
-    }
-}
-
 __global__ void MeanShift(const float *d_original_datapoints_x, const float *d_original_datapoints_y, float *d_shifted_datapoints_x, float *d_shifted_datapoints_y)
 {
     //get idx for this datapoint
