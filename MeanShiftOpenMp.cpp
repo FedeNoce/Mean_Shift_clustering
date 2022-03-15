@@ -1,7 +1,7 @@
 /*
  ============================================================================
  Name        : MeanShiftOpenMp.cpp
- Author      : Federico Nocentini
+ Author      : Federico Nocentini & Corso Vignoli
  Version     :
  Copyright   :
  Description : OpenMp implementation of Mean Shift clustering algorithm

@@ -1,25 +1,24 @@
 /*
  ============================================================================
  Name        : 2D_Mean_shift.cu
- Author      : Federico Nocentini
+ Author      : Federico Nocentini & Corso Vignoli
  Version     :
  Copyright   :
- Description : CUDA implementation of K-means clustering algorithm
+ Description : CUDA implementation of Mean Shift clustering algorithm
  ============================================================================
  */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <time.h>
 #include <string.h>
 
 
 #define N 100000
-#define MAX_ITER 10
+#define MAX_ITER 20
 #define BANDWIDTH 2
-#define TPB 64
-#define TILE_WIDTH 64
+#define TPB 128
+
 #define EPSILON 0.1
 
 
@@ -53,46 +52,40 @@ __global__ void MeanShift(const float *d_original_datapoints_x, const float *d_o
 
 }
 
-int main()
-{
+int main() {
     srand(time(NULL));   // Initialization, should only be called once.
     FILE *fpt;
-    //FILE *fpt_centroids;
-
-    fpt = fopen("/home/federico/CLionProjects/Mean_Shift_clustering/datasets/2D_data_3.csv", "r");
-    //fpt = fopen("/home/federico/CLionProjects/kmeans_cuda/datasets/2D_data_uniform.csv", "r");
-    //fpt_centroids = fopen("/home/federico/CLionProjects/kmeans_cuda/datasets/2D_data_3_centroids.csv", "r");
+    const char *file_name = "/home/federico/CLionProjects/Mean_Shift_clustering/datasets/2D_data_100000.csv";
+    fpt = fopen(file_name, "r");
+    printf("%s\n", file_name);
 
     //allocate memory on the device for the data points
     float *d_original_datapoints_x;
     float *d_original_datapoints_y;
     float *d_shifted_datapoints_x;
     float *d_shifted_datapoints_y;
-    //allocate memory on the device for the cluster assignments
-    int *d_clust_assn;
+
 
 
     cudaMalloc(&d_original_datapoints_x, N*sizeof(float));
     cudaMalloc(&d_original_datapoints_y, N*sizeof(float));
     cudaMalloc(&d_shifted_datapoints_x, N*sizeof(float));
     cudaMalloc(&d_shifted_datapoints_y, N*sizeof(float));
-    cudaMalloc(&d_clust_assn,N*sizeof(int));
 
 
     //allocate memory for host
-    float *h_original_datapoints_x = (float*)malloc(N*sizeof(float));
-    float *h_original_datapoints_y = (float*)malloc(N*sizeof(float));
-    float *h_shifted_datapoints_x = (float*)malloc(N*sizeof(float));
-    float *h_shifted_datapoints_y = (float*)malloc(N*sizeof(float));
-    int *h_clust_assn = (int*)malloc(N*sizeof(int));
+    float *h_original_datapoints_x = (float *) malloc(N*sizeof(float));
+    float *h_original_datapoints_y = (float *) malloc(N*sizeof(float));
+    float *h_shifted_datapoints_x = (float *) malloc(N*sizeof(float));
+    float *h_shifted_datapoints_y = (float *) malloc(N*sizeof(float));
 
 
 
     //initalize datapoints from csv
-    printf("DataPoints: \n");
-    for(int i=0;i<N;++i){
-        fscanf(fpt,"%f,%f\n", &h_original_datapoints_x[i], &h_original_datapoints_y[i]);
-        printf("(%f, %f) \n",  h_original_datapoints_x[i], h_original_datapoints_y[i]);
+    //printf("DataPoints: \n");
+    for (int i = 0; i < N; ++i) {
+        fscanf(fpt, "%f,%f\n", &h_original_datapoints_x[i], &h_original_datapoints_y[i]);
+        //printf("(%f, %f) \n",  h_original_datapoints_x[i], h_original_datapoints_y[i]);
         h_shifted_datapoints_x[i] = h_original_datapoints_x[i];
         h_shifted_datapoints_y[i] = h_original_datapoints_y[i];
 
@@ -103,62 +96,57 @@ int main()
 
 
     //copy datapoints and all other data from host to device
-    cudaMemcpy(d_original_datapoints_x,h_original_datapoints_x,N*sizeof(float),cudaMemcpyHostToDevice);
-    cudaMemcpy(d_original_datapoints_y,h_original_datapoints_y,N*sizeof(float),cudaMemcpyHostToDevice);
-    cudaMemcpy(d_shifted_datapoints_x,h_shifted_datapoints_x,N*sizeof(float),cudaMemcpyHostToDevice);
-    cudaMemcpy(d_shifted_datapoints_y,h_shifted_datapoints_y,N*sizeof(float),cudaMemcpyHostToDevice);
+    cudaMemcpy(d_original_datapoints_x, h_original_datapoints_x, N*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_original_datapoints_y, h_original_datapoints_y, N*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_shifted_datapoints_x, h_shifted_datapoints_x, N*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_shifted_datapoints_y, h_shifted_datapoints_y, N*sizeof(float), cudaMemcpyHostToDevice);
 
 
     //Start time for clustering
     clock_t start = clock();
     int cur_iter = 0;
 
-    while(cur_iter < MAX_ITER)
-    {
-        //Start time for iteration
-        clock_t start_iter = clock();
-        MeanShift<<<(N+TPB-1)/TPB, TPB>>>(d_original_datapoints_x, d_original_datapoints_y, d_shifted_datapoints_x, d_shifted_datapoints_y);
-        clock_t end_iter = clock();
-        float seconds = (float)(end_iter - start_iter) / CLOCKS_PER_SEC;
-        printf("Iter %d -> Time: %f\n",cur_iter, seconds);
+    while (cur_iter < MAX_ITER) {
+        MeanShift<<<(N+TPB - 1) / TPB, TPB>>>(d_original_datapoints_x, d_original_datapoints_y, d_shifted_datapoints_x, d_shifted_datapoints_y);
+
         cur_iter++;
     }
     clock_t end = clock();
-    float seconds = (float)(end - start) / CLOCKS_PER_SEC;
-    printf("Time for clustering: %f\n", seconds);
-    cudaMemcpy(h_shifted_datapoints_x,d_shifted_datapoints_x,N*sizeof(float),cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_shifted_datapoints_y,d_shifted_datapoints_y,N*sizeof(float),cudaMemcpyDeviceToHost);
-    for(int i=0;i<N;++i){
-        printf("(%f, %f) \n", h_shifted_datapoints_x[i], h_shifted_datapoints_y[i]);
-    }
+    float seconds = (float) (end - start) / CLOCKS_PER_SEC;
+    printf("Time for clustering: %f s \n", seconds);
+    printf("Time for average iteration: %f s\n", seconds / MAX_ITER);
+    cudaMemcpy(h_shifted_datapoints_x, d_shifted_datapoints_x, N*sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_shifted_datapoints_y, d_shifted_datapoints_y, N*sizeof(float), cudaMemcpyDeviceToHost);
 
 
-/*    for(int i=0;i<N;++i){
-        if(h_shifted_datapoints_x[i] != 0.0){
-            float current_centroid_x=h_shifted_datapoints_x[i];
-            //float current_centroid_y=h_shifted_datapoints_y[i];
-            for(int j=i+1;j<N;j++){
-                if(abs(h_shifted_datapoints_x[j] - current_centroid_x) < EPSILON){
-                    h_shifted_datapoints_x[j]=0.0;
-                    //h_shifted_datapoints_y[j]=0.0;
+    for (int i = 0; i < N; ++i) {
+        if (h_shifted_datapoints_x[i] != 0.0) {
+            float current_centroid_x = h_shifted_datapoints_x[i];
+
+            for (int j = i + 1; j < N; j++) {
+                if (abs(h_shifted_datapoints_x[j] - current_centroid_x) < EPSILON) {
+                    h_shifted_datapoints_x[j] = 0.0;
                 }
             }
         }
     }
     printf("Centroids: \n");
-    for(int i=0;i<N;++i){
-        if(h_shifted_datapoints_x[i] != 0.0) {
+    for (int i = 0; i < N; ++i) {
+        if (h_shifted_datapoints_x[i] != 0.0) {
             printf("(%f, %f) \n", h_shifted_datapoints_x[i], h_shifted_datapoints_y[i]);
         }
-    }*/
-
-
-    FILE *res;
-
-    res = fopen("/home/federico/CLionProjects/Mean_Shift_clustering/results/2D_data_3_results.csv", "w+");
-    for(int i=0;i<N;i++){
-        fprintf(res,"%d\n", h_clust_assn[i]);
     }
+
+
+    free(h_shifted_datapoints_x);
+    free(h_shifted_datapoints_y);
+    free(h_original_datapoints_x);
+    free(h_original_datapoints_y);
+
+    cudaFree(d_shifted_datapoints_x);
+    cudaFree(d_shifted_datapoints_y);
+    cudaFree(d_original_datapoints_x);
+    cudaFree(d_original_datapoints_y);
 
 
     return 0;

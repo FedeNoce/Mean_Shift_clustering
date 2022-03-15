@@ -1,7 +1,7 @@
 /*
  ============================================================================
  Name        : MeanShiftOpenMp.cpp
- Author      : Federico Nocentini
+ Author      : Federico Nocentini & Corso Vignoli
  Version     :
  Copyright   :
  Description : OpenMp implementation of Mean Shift clustering algorithm
@@ -31,11 +31,9 @@ void mean_shift(vector<Point> &points, vector<Point> &shifted_points);
 
 
 int main() {
-    int num_thread = 12;
-    omp_set_num_threads(num_thread);
+
     printf("Number of points %d\n", num_point);
-    printf("Number of processors: %d\n", omp_get_num_procs());
-    printf("Number of threads: %d\n", num_thread);
+
 
     srand(int(time(NULL)));
 
