@@ -30,5 +30,5 @@ x_coords_centr = np.array((x_coords_centr))
 y_coords_centr = np.array((y_coords_centr))
 
 plt.scatter(x_coords, y_coords)
-#plt.scatter(x_coords_centr, y_coords_centr)
+plt.scatter(x_coords_centr, y_coords_centr)
 plt.show()
