@@ -1,5 +1,5 @@
 # Mean_Shift_clustering
-We implemented the 2D kmeans algorithm in three different ways:
+We implemented the 2D Mean Shift algorithm, with 2 different Kernel, in three different ways:
 1) A sequential mode in C++
 2) A Parallel mode in OpenMP
 3) A Parallel mode in Cuda
