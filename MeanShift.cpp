@@ -22,12 +22,15 @@
 using namespace std;
 using namespace std::chrono;
 
-int num_point = 1000;
-int max_iterations = 20;
+int num_point = 100;
+int max_iterations = 10;
 int bandwidth = 2;
+int lambda = 1;
 
 vector<Point> init_point();
 void mean_shift(vector<Point> &points, vector<Point> &shifted_points);
+void flat_mean_shift(vector<Point> &points, vector<Point> &shifted_points);
+
 
 
 int main() {
@@ -57,36 +60,38 @@ int main() {
 
         iterations ++;
 
-        mean_shift(points, shifted_points);
-
+        flat_mean_shift(points, shifted_points);
         printf("Iteration %d done \n", iterations);
 
     }
 
-    double time_point2 = omp_get_wtime();
-    double duration = time_point2 - time_point1;
-
-    printf("Number of iterations: %d, total time: %f seconds, time per iteration: %f seconds\n",
-           iterations, duration, duration/iterations);
 
     for(int i=0;i<num_point;++i){
         if(shifted_points[i].get_x_coord() != 0.0){
             float current_centroid_x=shifted_points[i].get_x_coord();
             //float current_centroid_y=h_shifted_datapoints_y[i];
             for(int j=i+1;j<num_point;j++){
-                if(abs(shifted_points[j].get_x_coord() - current_centroid_x) < 0.0001){
+                if(abs(shifted_points[j].get_x_coord() - current_centroid_x) < 0.1){
                     shifted_points[j].set_x_coord(0.0);
                     //h_shifted_datapoints_y[j]=0.0;
                 }
             }
         }
     }
+    FILE *res;
+    res = fopen("/home/federico/CLionProjects/Mean_Shift_clustering/results/2D_data_3_results.csv", "w+");
     printf("Centroids: \n");
     for(int i=0;i<num_point;++i){
         if(shifted_points[i].get_x_coord()!= 0.0) {
             printf("(%f, %f) \n", shifted_points[i].get_x_coord(), shifted_points[i].get_y_coord());
+            fprintf(res,"%f, %f\n", shifted_points[i].get_x_coord(), shifted_points[i].get_y_coord());
         }
     }
+    double time_point2 = omp_get_wtime();
+    double duration = time_point2 - time_point1;
+
+    printf("Time for clustering: %f \n",duration);
+    printf("Time for average iteration: %f \n",duration/iterations);
 
     return 0;
 
@@ -97,7 +102,7 @@ int main() {
 vector<Point> init_point(){
 
 
-    string fname = "/home/federico/CLionProjects/Mean_Shift_clustering/datasets/2D_data_3.csv";
+    string fname = "/home/federico/CLionProjects/Mean_Shift_clustering/datasets/2D_data_100.csv";
     vector<vector<string>> content;
     vector<string> row;
     string line, word;
@@ -120,7 +125,7 @@ vector<Point> init_point(){
     cout<<"Datapoints:"<<"\n";
     for(int i=0;i<content.size();i++)
     {
-        cout<<content[i][0]<<","<<content[i][0]<<"\n";
+        cout<<content[i][0]<<","<<content[i][1]<<"\n";
         Point* point = new Point(std::stod(content[i][0]), std::stod(content[i][1]));
         ptr[i] = *point;
     }
@@ -157,6 +162,35 @@ void mean_shift(vector<Point> &points, vector<Point> &shifted_points){
 
     }
 }
+float distance_(float x1, float x2, float y1, float y2){
+    return sqrt(pow((x1-y1),2) + pow((x2-y2),2));
+}
+
+void flat_mean_shift(vector<Point> &points, vector<Point> &shifted_points){
+
+    unsigned long points_size = points.size();
+    for (int i = 0; i < points_size; i++) {
+        float new_x = 0.0;
+        float new_y = 0.0;
+        float tot_weight = 0.0;
+
+        for (int j = 0; j < points_size; j++) {
+            if (distance_(points[j].get_x_coord(), points[j].get_y_coord(), shifted_points[i].get_x_coord(),
+                          shifted_points[i].get_y_coord()) < lambda) {
+                new_x += points[j].get_x_coord();
+                new_y += points[j].get_y_coord();
+                tot_weight += 1;
+            }
+
+        }
+        new_x /= tot_weight;
+        new_y /= tot_weight;
+        shifted_points[i].set_x_coord(new_x);
+        shifted_points[i].set_y_coord(new_y);
+    }
+}
+
+
 
 
 
