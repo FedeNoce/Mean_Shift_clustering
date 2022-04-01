@@ -6,14 +6,12 @@ import pandas as pd
 
 
 
-def generate_dataset(points, n_features, centers, std, file_name, centroids_file_name, output_directory):
+def generate_dataset(points, n_features, centers, std, file_name, output_directory):
     data, __, centroids = datasets.make_blobs(n_samples=points, n_features=n_features, centers=centers, cluster_std=std, shuffle=True, random_state=1000, return_centers=True)
     pd.DataFrame(data).to_csv(
         os.path.join(output_directory, file_name), header=False, index=False
     )
-    pd.DataFrame(centroids).to_csv(
-        os.path.join(output_directory, centroids_file_name), header=False, index=False
-    )
+
 
 def main():
 
@@ -21,8 +19,8 @@ def main():
     DATASETS_DIR = 'datasets/'
 
     # two dimensional datasets
-    for p in [100, 1000, 10000, 20000, 50000, 100000, 250000, 500000, 1000000]:
-       generate_dataset(points=p, n_features=2, centers=5, std=0.5, file_name=f'2D_data_{p}.csv', centroids_file_name=f'2D_data_3_centroids.csv', output_directory=DATASETS_DIR)
+    for p in [100, 1000, 10000, 20000, 50000, 100000]:
+       generate_dataset(points=p, n_features=2, centers=5, std=0.5, file_name=f'2D_data_{p}.csv', output_directory=DATASETS_DIR)
     #
     # # three dimensional datasets
     #
