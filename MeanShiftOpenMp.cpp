@@ -40,7 +40,6 @@ int main() {
 
     srand(int(time(NULL)));
 
-
     vector<Point> points;
     points = init_point();
     vector<Point> shifted_points;
