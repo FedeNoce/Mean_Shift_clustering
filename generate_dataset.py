@@ -21,8 +21,8 @@ def main():
     DATASETS_DIR = 'datasets/'
 
     # two dimensional datasets
-    for p in [100, 1000, 10000, 20000, 50000, 100000, 250000, 500000]:
-       generate_dataset(points=p, n_features=2, centers=5, std=0.3, file_name=f'2D_data_{p}.csv', centroids_file_name=f'2D_data_3_centroids.csv', output_directory=DATASETS_DIR)
+    for p in [100, 1000, 10000, 20000, 50000, 100000, 250000, 500000, 1000000]:
+       generate_dataset(points=p, n_features=2, centers=5, std=0.5, file_name=f'2D_data_{p}.csv', centroids_file_name=f'2D_data_3_centroids.csv', output_directory=DATASETS_DIR)
     #
     # # three dimensional datasets
     #
