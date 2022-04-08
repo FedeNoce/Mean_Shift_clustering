@@ -8,6 +8,7 @@ We implemented the 2D Mean Shift algorithm, with 2 different Kernel, in three di
 2) A Parallel mode in OpenMP
 3) A Parallel mode in Cuda
 
+For more information, read the [report](reports/MeanShift_Report.pdf) or the [presentation](reports/MeanShift_Presentation.pdf)
 ### Built With
 
 * [C++](https://isocpp.org/)
