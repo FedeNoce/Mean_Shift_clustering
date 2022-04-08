@@ -14,7 +14,7 @@
 #include <string.h>
 
 
-#define N 100
+#define N 10000
 #define MAX_ITER 10
 #define BANDWIDTH 2
 #define TPB 64
@@ -108,7 +108,7 @@ __global__ void getCentroids(float *d_shifted_datapoints_x, float *d_shifted_dat
 int main() {
     srand(time(NULL));   // Initialization, should only be called once.
     FILE *fpt;
-    const char *file_name = "/home/federico/CLionProjects/Mean_Shift_clustering/datasets/2D_data_100.csv";
+    const char *file_name = "/home/federico/CLionProjects/Mean_Shift_clustering/datasets/2D_data_10000.csv";
     fpt = fopen(file_name, "r");
     printf("%s\n", file_name);
 
@@ -120,19 +120,19 @@ int main() {
 
 
 
-
+    //allocate memory on the device for the data points
     cudaMalloc(&d_original_datapoints_x, N*sizeof(float));
     cudaMalloc(&d_original_datapoints_y, N*sizeof(float));
     cudaMalloc(&d_shifted_datapoints_x, N*sizeof(float));
     cudaMalloc(&d_shifted_datapoints_y, N*sizeof(float));
 
-
+    //allocate memory on the host for the data points
     float *h_original_datapoints_x;
     float *h_original_datapoints_y;
     float *h_shifted_datapoints_x;
     float *h_shifted_datapoints_y;
 
-
+    //allocate memory on the host for the data points
     cudaMallocHost(&h_original_datapoints_x, N*sizeof(float));
     cudaMallocHost(&h_original_datapoints_y, N*sizeof(float));
     cudaMallocHost(&h_shifted_datapoints_x, N*sizeof(float));
@@ -170,7 +170,9 @@ int main() {
 
 
     while (cur_iter < MAX_ITER) {
+        //Choose the kernel
         MeanShift<<<(N+TPB - 1) / TPB, TPB>>>(d_original_datapoints_x, d_original_datapoints_y, d_shifted_datapoints_x, d_shifted_datapoints_y);
+        //Flat_MeanShift<<<(N+TPB - 1) / TPB, TPB>>>(d_original_datapoints_x, d_original_datapoints_y, d_shifted_datapoints_x, d_shifted_datapoints_y);
         cur_iter++;
     }
 

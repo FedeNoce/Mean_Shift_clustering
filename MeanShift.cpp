@@ -59,8 +59,9 @@ int main() {
     while(iterations < max_iterations){
 
         iterations ++;
-
+        //Choose the Kernel
         flat_mean_shift(points, shifted_points);
+        //mean_shift(points, shifted_points);
         printf("Iteration %d done \n", iterations);
 
     }
