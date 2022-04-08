@@ -1,6 +1,6 @@
 # Mean Shift Implementation
 
-![alt text](https://github.com/FedeNoce/Kmeans/blob/master/.idea/c.jpg)
+![alt text](https://github.com/FedeNoce/Mean_Shift_clustering/blob/master/.idea/p.png)
 
 ## About The Project
 We implemented the 2D Mean Shift algorithm, with 2 different Kernel, in three different ways:
